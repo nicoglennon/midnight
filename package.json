@@ -1,5 +1,5 @@
 {
-  "name": "vue",
+  "name": "midnite",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
+    "phosphor-vue": "^1.0.0",
     "vue": "^2.6.10"
   },
   "devDependencies": {
