@@ -1,53 +1,96 @@
 <template>
-  <div class="templatewrapper">
-    <div v-if="loaded">
-      <div class="playerwrapper"></div>
-      <div class="marqueewrapper">
-        <div class="marqueeouter">
-          <div
-            class="marqueeinner"
-            @mouseenter="handleShowSongTitle"
-            @mouseleave="handleHideSongTitle"
-          >
-            <div class="playerwrapper">
-              <div
-                v-if="firstPlay"
-                v-on:click="onClickBack"
-                class="buttonwrapper"
-              >
-                <PhSkipBack :size="40" color="#fff" />
-              </div>
-              <div
-                v-on:click="onPause"
-                v-if="state === 'playing'"
-                class="buttonwrapper"
-              >
-                <PhPauseCircle :size="40" color="#fff" />
-              </div>
-              <div v-else v-on:click="onPlay" class="buttonwrapper">
-                <PhPlayCircle :size="40" color="#fff" />
-              </div>
-              <div v-if="firstPlay" v-on:click="onNext" class="buttonwrapper">
-                <PhSkipForward :size="40" color="#fff" />
-              </div>
+  <div
+    class="templatewrapper"
+    :style="{
+      backgroundColor: currentPlaylistName
+        ? playlistData[currentPlaylistName].color
+        : 'unset',
+    }"
+  >
+    <div class="topleftlogo">
+      <i class="nes-icon heart is-medium"></i>
+      <i class="nes-icon heart is-medium"></i>
+      <i class="nes-icon heart is-medium is-half"></i>
+    </div>
+    <div class="madebytext">
+      <div class="nes-balloon from-right nes-pointer" v-on:click="openModal">
+        <p>?</p>
+      </div>
+    </div>
+    <div class="playlistselectwrapper">
+      <div class="nes-select playlistselectinner">
+        <select
+          required
+          v-model="currentPlaylistName"
+          class="dropdown"
+          @change="playlistSelected"
+        >
+          <option value="null" disabled selected>vibe check...</option>
+          <option v-for="opt in playlistDataKeys" :key="opt" :value="opt">{{
+            playlistData[opt].label
+          }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="marqueewrapper">
+      <div class="marqueeouter" v-if="firstPlay">
+        <div class="marqueeinner">
+          <div class="playerwrapper">
+            <div v-on:click="onClickBack" class="buttonwrapper">
+              <button type="button" class="nes-btn">&lt;</button>
             </div>
-            <div>
-              <a
-                :href="currentTrack.url"
-                target="_blank"
-                class="songlink"
-                v-if="currentTrack && showSongTitle"
-              >
-                <!-- <PhMusicNotesSimple :size="30" /> -->
-                <p class="tracktitle">{{ currentTrack.title }}</p>
-              </a>
+            <div
+              v-on:click="onPause"
+              v-if="state === 'playing'"
+              class="buttonwrapper"
+            >
+              <button type="button" class="nes-btn playpause">Pause</button>
+            </div>
+            <div v-else v-on:click="onPlay" class="buttonwrapper">
+              <button type="button" class="nes-btn playpause">Play</button>
+            </div>
+            <div v-on:click="onNext" class="buttonwrapper">
+              <button type="button" class="nes-btn">&gt;</button>
             </div>
           </div>
+          <div class="songlinkwrapper">
+            <a
+              :href="currentTrack.url"
+              target="_blank"
+              class="songlink"
+              v-if="currentTrack"
+            >
+              <button type="button" class="nes-btn">
+                {{ currentTrack.artist + " - " + currentTrack.title }}
+              </button>
+            </a>
+          </div>
         </div>
-        <div
-          class="timetrackerdiv"
-          :style="{ width: `${percentageSong}%` }"
-        ></div>
+      </div>
+    </div>
+    <div class="modalwrapper" v-if="modalOpen">
+      <div class="modalcontent">
+        <div class="nes-container with-title is-dark">
+          <p class="title">Message</p>
+          <p>nes.fm was made by <a href="https://nico.gl">Nico</a>.</p>
+          <p>
+            To submit a playlist, you must create it on soundcloud and email me
+            the link at
+            <a href="mailto:hi@nico.gl">hi@nico.gl</a>.
+          </p>
+          <p>Enjoy the rest of your day on the internet.</p>
+          <button class="nes-btn" v-on:click="closeModal">
+            Back
+          </button>
+          <a href="https://nico.gl">
+            <button class="nes-btn is-primary">
+              @nicoglennon
+            </button>
+          </a>
+          <br />
+          <br />
+          <p class="copyright">© 2020 nes.fm</p>
+        </div>
       </div>
     </div>
   </div>
@@ -55,29 +98,20 @@
 
 <script>
 /*global SC*/
+import playlistData from "../utils/playlistData";
 const modulo = (n, m) => {
   var remain = n % m;
   return Math.floor(remain >= 0 ? remain : remain + m);
 };
-import {
-  PhPauseCircle,
-  PhPlayCircle,
-  PhSkipForward,
-  PhSkipBack,
-} from "phosphor-vue";
+
 export default {
   name: "Main",
-  components: {
-    PhPauseCircle,
-    PhPlayCircle,
-    PhSkipForward,
-    PhSkipBack,
-  },
   props: {
     msg: String,
   },
   data: () => ({
-    currentPlaylistId: "1160871130",
+    currentPlaylistName: null,
+    currentPlaylistId: null,
     currentTrackId: null,
     trackIds: [],
     tracks: [],
@@ -86,30 +120,19 @@ export default {
     loaded: false,
     state: "paused",
     firstPlay: false,
-    showSongTitle: false,
-    percentageSong: 0,
+    playlistData,
+    playlistDataKeys: Object.keys(playlistData),
+    modalOpen: false,
   }),
-  mounted: async function () {
-    const res = await SC.get(`/playlists/${this.currentPlaylistId}`);
-    this.tracks = res.tracks.map((track) => ({
-      id: track.id,
-      title: track.title,
-      artist: track.user.username,
-      url: track.permalink_url,
-      duration: track.duration,
-    }));
-    this.trackIds = res.tracks.map((track) => track.id);
-    this.currentTrackId = this.trackIds[this.trackIndex];
-    await this.pullSong();
-    this.loaded = true;
+  mounted: async function() {
+    //
   },
   methods: {
-    pullSong: async function () {
+    pullSong: async function() {
       try {
         this.player = await SC.stream(`/tracks/${this.currentTrackId}`);
         // console.log("pulled successfully!");
         this.player.on("finish", this.onNext);
-        this.player.on("time", this.trackTime);
       } catch (e) {
         // console.error(
         //   "Playback rejected. Try calling play() from a user interaction.",
@@ -117,7 +140,7 @@ export default {
         // );
       }
     },
-    onPlay: async function () {
+    onPlay: async function() {
       await this.player.play();
       this.state = "playing";
       this.currentTrack = this.tracks[this.trackIndex];
@@ -125,21 +148,21 @@ export default {
         this.firstPlay = true;
       }
     },
-    onNext: async function () {
+    onNext: async function() {
       await this.player.pause();
       this.trackIndex = (this.trackIndex + 1) % this.trackIds.length;
       this.currentTrackId = this.trackIds[this.trackIndex];
       await this.pullSong();
       await this.onPlay();
     },
-    onBack: async function () {
+    onBack: async function() {
       await this.player.pause();
       this.trackIndex = modulo(this.trackIndex - 1, this.trackIds.length);
       this.currentTrackId = this.trackIds[this.trackIndex];
       await this.pullSong();
       await this.onPlay();
     },
-    onClickBack: async function () {
+    onClickBack: async function() {
       const currentTime = await this.player.currentTime();
       if (currentTime > 2000) {
         await this.player.seek(0);
@@ -147,19 +170,39 @@ export default {
         await this.onBack();
       }
     },
-    onPause: async function () {
+    onPause: async function() {
       this.player.pause();
       this.state = "paused";
     },
-    handleShowSongTitle: async function () {
-      this.showSongTitle = true;
+    playlistSelected: async function(e) {
+      if (this.player) {
+        await this.player.pause();
+      }
+      if (this.currentPlaylistId !== playlistData[e.target.value].id) {
+        this.currentPlaylistId = playlistData[e.target.value].id;
+        await this.mountPlaylist();
+      }
     },
-    handleHideSongTitle: async function () {
-      this.showSongTitle = false;
+    mountPlaylist: async function() {
+      const res = await SC.get(`/playlists/${this.currentPlaylistId}`);
+      this.tracks = res.tracks.map((track) => ({
+        id: track.id,
+        title: track.title,
+        artist: track.user.username,
+        url: track.permalink_url,
+        duration: track.duration,
+      }));
+      this.trackIds = res.tracks.map((track) => track.id);
+      this.trackIndex = 0;
+      this.currentTrackId = this.trackIds[this.trackIndex];
+      await this.pullSong();
+      await this.onPlay();
     },
-    trackTime: async function () {
-      this.percentageSong =
-        100 * (this.player.currentTime() / this.currentTrack.duration);
+    openModal: function() {
+      this.modalOpen = true;
+    },
+    closeModal: function() {
+      this.modalOpen = false;
     },
   },
 };
@@ -182,46 +225,49 @@ a {
   color: inherit;
   text-decoration: none;
 }
+p {
+  background-color: inherit;
+}
+.madebytext {
+  position: fixed;
+  font-size: 16px;
+  bottom: 0;
+  right: 0;
+  padding: 10px;
+  z-index: 5;
+}
 .templatewrapper {
-  padding: 20px;
 }
 .marqueewrapper {
   position: fixed;
+  width: max-content;
   bottom: 0;
   left: 0;
   right: 0;
-  font-size: 22px;
-  /* text-align: center; */
+  font-size: 14px;
   display: flex;
   flex-direction: column;
+  z-index: 4;
 }
 .marqueeinner {
-  border-radius: 15px;
-  padding: 5px;
+  padding: 2px;
   width: max-content;
-  /* margin: auto; */
   text-align: center;
-  /* background-color: rgba(255, 255, 255, 0.05); */
-  transition: background-color 200ms ease;
   display: flex;
   align-items: center;
-}
-.marqueeinner:hover {
-  background-color: rgba(255, 255, 255, 0.07);
-  color: white;
+  flex-wrap: wrap;
+  flex-shrink: 1;
 }
 .marqueeouter {
-  padding: 5px;
+  padding: 15px;
 }
 .tracktitle {
   margin: 0;
   margin-left: 10px;
 }
 .playerwrapper {
-  padding: 5px;
-  margin: auto;
+  padding: 0px;
   display: flex;
-  max-width: 180px;
   width: max-content;
   justify-content: center;
 }
@@ -231,29 +277,69 @@ a {
   align-items: center;
   justify-content: center;
 }
-.buttonwrapper:hover {
-  opacity: 0.7;
-  transition: opacity 200ms ease;
-}
-.buttonwrapper:active {
-  transform: scale(0.95);
-}
-.timetrackerdiv {
-  height: 3px;
-  background-color: #fff;
-}
 .songlink {
   display: flex;
   justify-content: center;
   align-items: center;
   width: max-content;
   transition: opacity 200ms ease;
-  margin: 10px;
-  margin-left: 0px;
-  /* font-style: italic; */
 }
-.songlink:hover {
-  opacity: 0.7;
-  text-decoration: underline;
+.songlinkwrapper {
+  flex: 1;
+}
+.playpause {
+  min-width: 100px;
+}
+.playlistselectwrapper {
+  position: relative;
+  margin: auto;
+  max-width: 480px;
+  height: 100vh;
+}
+.playlistselectinner {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+.dropdown {
+  font-size: 20px;
+}
+.message-left {
+  display: flex;
+  text-align: left;
+}
+.message-right {
+  display: flex;
+  justify-content: flex-end;
+  text-align: left;
+}
+.topleftlogo {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 5;
+}
+
+.modalwrapper {
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: #212529; /* Fallback color */
+}
+
+/* Modal Content/Box */
+.modalcontent {
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  max-width: 600px; /* Could be more or less, depending on screen size */
+}
+.copyright {
+  text-align: right;
 }
 </style>

@@ -17,15 +17,14 @@ export default {
 
 <style>
 #app {
-  font-family: "Xanh Mono", monospace;
+  font-family: "Press Start 2P", monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #fff;
+  color: #333;
   height: 100vh;
   width: 100%;
-  /* font-family: "Xanh Mono"; */
-  background-color: #633636;
+  background-color: mistyrose;
 }
 body {
   margin: 0;
