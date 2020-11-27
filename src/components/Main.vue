@@ -7,6 +7,8 @@
         : 'unset',
     }"
   >
+    <audio ref="clickaudio" src="../audio/click.mp3"></audio>
+    <audio ref="tapeaudio" src="../audio/tape.mp3"></audio>
     <div class="topleftlogo">
       <i class="nes-icon heart is-medium"></i>
       <i class="nes-icon heart is-medium"></i>
@@ -33,8 +35,9 @@
       </div>
     </div>
     <div class="marqueewrapper">
-      <div class="marqueeouter" v-if="firstPlay">
-        <div class="marqueeinner">
+      <div class="marqueeouter">
+        <button class="nes-btn" v-if="isLoadingState">Loading...</button>
+        <div class="marqueeinner" v-if="firstPlay && !isLoadingState">
           <div class="playerwrapper">
             <div v-on:click="onClickBack" class="buttonwrapper">
               <button type="button" class="nes-btn">&lt;</button>
@@ -46,10 +49,10 @@
             >
               <button type="button" class="nes-btn playpause">Pause</button>
             </div>
-            <div v-else v-on:click="onPlay" class="buttonwrapper">
+            <div v-else v-on:click="onClickPlay" class="buttonwrapper">
               <button type="button" class="nes-btn playpause">Play</button>
             </div>
-            <div v-on:click="onNext" class="buttonwrapper">
+            <div v-on:click="onClickNext" class="buttonwrapper">
               <button type="button" class="nes-btn">&gt;</button>
             </div>
           </div>
@@ -69,28 +72,23 @@
       </div>
     </div>
     <div class="modalwrapper" v-if="modalOpen">
-      <div class="modalcontent">
-        <div class="nes-container with-title is-dark">
-          <p class="title">Message</p>
-          <p>nes.fm was made by <a href="https://nico.gl">Nico</a>.</p>
-          <p>
-            To submit a playlist, you must create it on soundcloud and email me
-            the link at
-            <a href="mailto:hi@nico.gl">hi@nico.gl</a>.
-          </p>
-          <p>Enjoy the rest of your day on the internet.</p>
-          <button class="nes-btn" v-on:click="closeModal">
-            Back
+      <div class="nes-container with-title">
+        <p class="title">© 2020 Vibes</p>
+        <p>Hello internet stranger. I'm Nico.</p>
+        <p>
+          To submit a playlist, send the Soundcloud link to
+          <a href="mailto:hi@nico.gl" target="_blank">hi@nico.gl</a>.
+        </p>
+        <p>Have a nice day.</p>
+        <button class="nes-btn" v-on:click="closeModal">
+          Close
+        </button>
+        <span>{{ " " }}</span>
+        <a href="https://nico.gl" target="_blank">
+          <button class="nes-btn is-primary">
+            Who is Nico?
           </button>
-          <a href="https://nico.gl">
-            <button class="nes-btn is-primary">
-              @nicoglennon
-            </button>
-          </a>
-          <br />
-          <br />
-          <p class="copyright">© 2020 nes.fm</p>
-        </div>
+        </a>
       </div>
     </div>
   </div>
@@ -123,6 +121,7 @@ export default {
     playlistData,
     playlistDataKeys: Object.keys(playlistData),
     modalOpen: false,
+    isLoadingState: false,
   }),
   mounted: async function() {
     //
@@ -140,13 +139,23 @@ export default {
         // );
       }
     },
+    onClickPlay: async function() {
+      await this.playClickSound();
+      setTimeout(async () => {
+        this.onPlay();
+      }, 400);
+    },
     onPlay: async function() {
-      await this.player.play();
       this.state = "playing";
       this.currentTrack = this.tracks[this.trackIndex];
       if (!this.firstPlay) {
         this.firstPlay = true;
       }
+      await this.player.play();
+    },
+    onClickNext: async function() {
+      await this.playClickSound();
+      this.onNext();
     },
     onNext: async function() {
       await this.player.pause();
@@ -157,21 +166,28 @@ export default {
     },
     onBack: async function() {
       await this.player.pause();
+      await this.playClickSound();
       this.trackIndex = modulo(this.trackIndex - 1, this.trackIds.length);
       this.currentTrackId = this.trackIds[this.trackIndex];
       await this.pullSong();
       await this.onPlay();
     },
     onClickBack: async function() {
+      await this.player.pause();
       const currentTime = await this.player.currentTime();
       if (currentTime > 2000) {
+        this.playClickSound();
         await this.player.seek(0);
+        setTimeout(async () => {
+          await this.onPlay();
+        }, 400);
       } else {
         await this.onBack();
       }
     },
     onPause: async function() {
-      this.player.pause();
+      await this.player.pause();
+      this.playClickSound();
       this.state = "paused";
     },
     playlistSelected: async function(e) {
@@ -184,6 +200,8 @@ export default {
       }
     },
     mountPlaylist: async function() {
+      await this.playTapeSound();
+      this.toggleLoading();
       const res = await SC.get(`/playlists/${this.currentPlaylistId}`);
       this.tracks = res.tracks.map((track) => ({
         id: track.id,
@@ -192,17 +210,33 @@ export default {
         url: track.permalink_url,
         duration: track.duration,
       }));
+      console.log(res.tracks);
       this.trackIds = res.tracks.map((track) => track.id);
       this.trackIndex = 0;
       this.currentTrackId = this.trackIds[this.trackIndex];
       await this.pullSong();
-      await this.onPlay();
+      setTimeout(async () => {
+        await this.toggleLoading();
+        this.playClickSound();
+        setTimeout(async () => {
+          await this.onPlay();
+        });
+      }, 400);
     },
     openModal: function() {
       this.modalOpen = true;
     },
     closeModal: function() {
       this.modalOpen = false;
+    },
+    playClickSound: async function() {
+      await this.$refs.clickaudio.play();
+    },
+    playTapeSound: async function() {
+      await this.$refs.tapeaudio.play();
+    },
+    toggleLoading: async function() {
+      this.isLoadingState = !this.isLoadingState;
     },
   },
 };
@@ -234,6 +268,7 @@ p {
   bottom: 0;
   right: 0;
   padding: 10px;
+  padding-bottom: 5px;
   z-index: 5;
 }
 .templatewrapper {
@@ -250,7 +285,7 @@ p {
   z-index: 4;
 }
 .marqueeinner {
-  padding: 2px;
+  /* padding: 2px; */
   width: max-content;
   text-align: center;
   display: flex;
@@ -325,19 +360,18 @@ p {
 .modalwrapper {
   position: fixed; /* Stay in place */
   z-index: 1; /* Sit on top */
-  left: 0;
+  right: 0;
   top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: #212529; /* Fallback color */
+  margin: 15px;
+  padding: 3px;
+  max-width: 700px;
+  background-color: white;
 }
 
 /* Modal Content/Box */
 .modalcontent {
-  margin: 15% auto; /* 15% from the top and centered */
-  padding: 20px;
-  max-width: 600px; /* Could be more or less, depending on screen size */
+  padding: 10px;
+  max-width: 700px; /* Could be more or less, depending on screen size */
 }
 .copyright {
   text-align: right;
