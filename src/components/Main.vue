@@ -210,7 +210,6 @@ export default {
         url: track.permalink_url,
         duration: track.duration,
       }));
-      console.log(res.tracks);
       this.trackIds = res.tracks.map((track) => track.id);
       this.trackIndex = 0;
       this.currentTrackId = this.trackIds[this.trackIndex];
