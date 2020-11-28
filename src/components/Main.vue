@@ -77,9 +77,9 @@
         <p>Hello internet stranger. I'm Nico.</p>
         <p>
           To submit a playlist, send the Soundcloud link to
-          <a href="mailto:hi@nico.gl" target="_blank">hi@nico.gl</a>.
+          <a href="mailto:nico@vibes.af" target="_blank">nico@vibes.af</a>.
         </p>
-        <p>Have a nice day.</p>
+        <p>Have a nice day!</p>
         <button class="nes-btn" v-on:click="closeModal">
           Close
         </button>
@@ -210,6 +210,7 @@ export default {
         url: track.permalink_url,
         duration: track.duration,
       }));
+      // console.log("tracks: ", this.tracks.length);
       this.trackIds = res.tracks.map((track) => track.id);
       this.trackIndex = 0;
       this.currentTrackId = this.trackIds[this.trackIndex];

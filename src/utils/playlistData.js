@@ -1,4 +1,9 @@
 export default {
+  focusFlow: {
+    id: "1170021310",
+    label: "focus flow",
+    color: "mintcream",
+  },
   offTheJuice: {
     id: "1160871130",
     label: "off the juice",
@@ -9,25 +14,25 @@ export default {
     label: "chilling poolside",
     color: "lightcyan",
   },
-  bathroomParty: {
-    id: "1167505669",
-    label: "bathroom at a party",
-    color: "skyblue",
-  },
-  eightDimensional: {
-    id: "1167525031",
-    label: "eight dimensional",
-    color: "palevioletred",
-  },
-  sundayShower: {
-    id: "1167558145",
-    label: "sunday shower",
-    color: "khaki",
-  },
+  //   bathroomParty: {
+  //     id: "1167505669",
+  //     label: "bathroom at a party",
+  //     color: "skyblue",
+  //   },
+  //   eightDimensional: {
+  //     id: "1167525031",
+  //     label: "eight dimensional",
+  //     color: "palevioletred",
+  //   },
   dormRoomBanger: {
     id: "1167985345",
     label: "dorm room banger",
     color: "lightgreen",
+  },
+  lostInJersey: {
+    id: "1170045724",
+    label: "lost in jersey",
+    color: "khaki",
   },
   sugarHigh: {
     id: "1168095058",
@@ -35,8 +40,8 @@ export default {
     color: "pink",
   },
   tearsInTheClub: {
-    id: "1168096900",
+    id: "1170047182",
     label: "tears in the club",
-    color: "slategray",
+    color: "lightslategray",
   },
 };
