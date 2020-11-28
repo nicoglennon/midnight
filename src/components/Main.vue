@@ -91,6 +91,13 @@
         </a>
       </div>
     </div>
+    <div id="mobile-cover">
+      <i class="nes-bcrikko"></i>
+      <br />
+      <br />
+      <p>Hello internet stranger!</p>
+      <p>Vibes currently works only on desktop.</p>
+    </div>
   </div>
 </template>
 
@@ -375,5 +382,22 @@ p {
 }
 .copyright {
   text-align: right;
+}
+#mobile-cover {
+  padding: 40px;
+  font-size: 12px;
+  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: #f9f2d7;
+}
+@media only screen and (max-width: 500px) {
+  #mobile-cover {
+    display: block;
+  }
 }
 </style>
