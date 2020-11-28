@@ -395,7 +395,7 @@ p {
   z-index: 100;
   background-color: #f9f2d7;
 }
-@media only screen and (max-width: 500px) {
+@media only screen and (max-width: 600px) {
   #mobile-cover {
     display: block;
   }
