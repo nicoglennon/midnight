@@ -84,7 +84,7 @@
           Close
         </button>
         <span>{{ " " }}</span>
-        <a href="https://nico.gl" target="_blank">
+        <a href="https://twitter.com/nicoglennon" target="_blank">
           <button class="nes-btn is-primary">
             Who is Nico?
           </button>
