@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
+    "lodash.shuffle": "^4.2.0",
     "phosphor-vue": "^1.0.0",
     "vue": "^2.6.10"
   },

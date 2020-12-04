@@ -104,6 +104,7 @@
 <script>
 /*global SC*/
 import playlistData from "../utils/playlistData";
+import shuffle from "lodash.shuffle";
 const modulo = (n, m) => {
   var remain = n % m;
   return Math.floor(remain >= 0 ? remain : remain + m);
@@ -210,15 +211,16 @@ export default {
       await this.playTapeSound();
       this.toggleLoading();
       const res = await SC.get(`/playlists/${this.currentPlaylistId}`);
-      this.tracks = res.tracks.map((track) => ({
+      const tracks = res.tracks.map((track) => ({
         id: track.id,
         title: track.title,
         artist: track.user.username,
         url: track.permalink_url,
         duration: track.duration,
       }));
+      this.tracks = shuffle(tracks);
       // console.log("tracks: ", this.tracks.length);
-      this.trackIds = res.tracks.map((track) => track.id);
+      this.trackIds = this.tracks.map((track) => track.id);
       this.trackIndex = 0;
       this.currentTrackId = this.trackIds[this.trackIndex];
       await this.pullSong();
