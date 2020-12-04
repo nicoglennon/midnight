@@ -4,6 +4,11 @@ export default {
     label: "focus flow",
     color: "mintcream",
   },
+  sundayLaundry: {
+    id: "1170183805",
+    label: "sunday laundry",
+    color: "powderblue",
+  },
   offTheJuice: {
     id: "1160871130",
     label: "off the juice",
